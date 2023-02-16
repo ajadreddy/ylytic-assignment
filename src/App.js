@@ -1,8 +1,9 @@
 import './App.css';
 import {useState,useEffect} from 'react';
+import Pagination from './Pagination';
 function App() {
 
-  const [data, setData] = useState(null);
+  const [data, setData] = useState([]);
   const [sortDateOrder, setSortDateOrder] = useState('asc');
   const [sortLikeOrder, setSortLikeOrder] = useState('asc');
   const [sortReplyOrder, setSortReplyOrder] = useState('asc');
@@ -10,16 +11,18 @@ function App() {
   const [sortTextOrder, setSortTextOrder] = useState('asc');
 
   const [search, setSearch ]= useState('');
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [postsPerPage, setPostsPerPage] = useState(10);
 
-  
   useEffect(() => {
     fetch('https://dev.ylytic.com/ylytic/test')
       .then(response => response.json())
       .then(json => setData(json.comments));
       
   }, []);
-  // console.log(data)
+  const lastPostIndex = currentPage * postsPerPage;
+  const firstPostIndex = lastPostIndex - postsPerPage;
+  const currentPosts = data.slice(firstPostIndex, lastPostIndex);
 
     const handleDateSort = () => {
     const sortedData = data.sort((a, b) => {
@@ -85,13 +88,30 @@ function App() {
     setSortTextOrder(sortTextOrder === 'asc' ? 'desc' : 'asc');
   };
 
-  // const filteredItems = data.filter((item) =>
-  //   item.author.toLowerCase().includes(searchInput.toLowerCase())
-  // );
 
   return ( 
     <div className="App">
-      <input placeholder='Filter' onChange={(e)=>setSearch(e.target.value)}/>
+      <h1>Ylytic Assignment</h1>
+      <div className='section1' >
+        <div className='filter'>
+          <input placeholder='Filter' onChange={(e)=>setSearch(e.target.value)}/>
+        </div>
+        <div className='sub-section1'>
+          <Pagination
+            totalPosts={data.length}
+            postsPerPage={postsPerPage}
+            setCurrentPage={setCurrentPage}
+            currentPage={currentPage}
+          />
+          <div className='postsperpage'>
+            <p>Posts per page:</p>
+            <button onClick={()=>setPostsPerPage(25)}>25</button>
+            <button onClick={()=>setPostsPerPage(50)}>50</button>
+            <button onClick={()=>setPostsPerPage(100)}>100</button>
+          </div>
+        </div>
+      </div>
+      
     <div>
       {data ? (
         <table>
@@ -129,7 +149,7 @@ function App() {
               </th>
             </tr>
           </thead>
-          {data.filter((item) => {
+          {currentPosts.filter((item) => {
             return search.toLocaleLowerCase()==='' ? item : item.author.toLocaleLowerCase().includes(search)
           }).map(item => (
             <tr> 
